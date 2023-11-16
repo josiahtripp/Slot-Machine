@@ -1,11 +1,10 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <sstream>
 
 using namespace std;
-string tw, slotMessage;//Message to be displayed underslot machine
-const double jackpot = 100, award8 = 5, awardO = 3, awardA = 2, awardBlank = 1;//Amount to reward for each type 
+string tw, slotMessage = "noWin";//Message to be displayed underslot machine
+const int jackpot = 100, award8 = 5, awardO = 3, awardA = 2, awardBlank = 1;//Amount to reward for each type 
 const int coinsPerDollar = 4, doubleWin = 2, tripleWin = 5;//Rates & award bonuses
 
 char display[3][3] = {
@@ -78,7 +77,7 @@ bool coinChecker(double &money, int &coinAmount, string &message) {
 	return hasBoughtCoins;
 }
 
-void printMachine(char screen[][3], double money, int coinAmount, string winMessage){
+void printMachine(char screen[][3], double money, int coinAmount, string &winMessage){
 
 	cout << fixed << setprecision(0)//Prints scoreBoard
 		<< endl << "__________________________" << endl
@@ -91,7 +90,7 @@ void printMachine(char screen[][3], double money, int coinAmount, string winMess
 		<< "--------------------------" << endl << endl;
 
 	//Prints machine with wheel characters
- cout << R"(Slot Machine!
+ cout << R"(   Slot Machine!
 =====================        
 |                   |        
 |___________________|
@@ -122,8 +121,8 @@ void checkWinnings(char arr[][3], double& money, string& message) {
 
 	char winType[3];
 	int winNum = 0, earnings = 0;
-	ostringstream msg;
 	bool jp = false;
+	message = "";
 
 	for (int i = 0; i < 3; i++) //Horizontal Win
 		if (arr[i][0] == arr[i][1] && arr[i][1] == arr[i][2]) winType[winNum] = arr[i][0], winNum++;
@@ -133,7 +132,9 @@ void checkWinnings(char arr[][3], double& money, string& message) {
 
 	for (int i = 0; i < winNum; i++) {//Adds winning character(s) to string
 
-		msg << "|" << winType[i] << "|";
+		message += "|";
+		message += winType[i];
+		message += "|";
 
 		switch (winType[i]) {//adds initial earnings
 
@@ -159,8 +160,8 @@ void checkWinnings(char arr[][3], double& money, string& message) {
 			break;
 		}
 	}
-	msg << " x3: "; //Used for message display, removed if wins = 0
-	if (jp) msg << "Jackpot! ";//Adds if applicable
+	message += " x3: "; //Used for message display, removed if wins = 0
+	if (jp) message += "Jackpot! ";//Adds if applicable
 
 	switch (winNum) {//Actions based on Number of Wins
 
@@ -169,25 +170,25 @@ void checkWinnings(char arr[][3], double& money, string& message) {
 		break;
 
 	case 1:
-		msg << "Single Win";
+		message += "Single Win";
 		break;
 
 	case 2:
-		msg << "Double Win: Earnings x " + doubleWin;
+		message += "Double Win: Earnings x " + to_string(doubleWin);
 		earnings = earnings * doubleWin;
 		break;
 
 	case 3:
-		msg << "Triple Win: Earnings x " + tripleWin;
+		message += "Triple Win: Earnings x " + to_string(tripleWin);
 		earnings = earnings * tripleWin;
 		break;
 	}
 
 	if (winNum > 0) {
-		msg << "! | + $" << to_string(earnings) << "!";//Completes msg string and sets slotMessage to it
-		message = msg.str();
+		message += "! | + $" + to_string(earnings) + "!";//Completes msg string and sets slotMessage to it
 		money += earnings;
 	}
+	else message = "noWin";
 }
 
 int main() {
@@ -196,14 +197,13 @@ int main() {
 	int coinAmount = 0;
 	double money = 5;
 
-	for (int i = 0; i < 1;) {
+	for (int i = 0; i < 1;) {//Indefinite Loop
 
-		if (coinChecker(money, coinAmount, slotMessage)) cin.ignore();//Returns True if the user purchases coins
-		system("cls");
+		if (coinChecker(money, coinAmount, slotMessage)) cin.ignore();//Returns true if the user purchases coins
 		printMachine(display, money, coinAmount, slotMessage);
 		getline(cin, tw);
+		system("cls");
 		spinWheels(display, coinAmount);
-		checkWinnings(display, money, slotMessage);
+		checkWinnings(display, money, slotMessage);//Resets message to noWin if no win is present
 	}
-
 }
