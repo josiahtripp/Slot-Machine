@@ -3,9 +3,23 @@
 #include <string>
 
 using namespace std;
-string tw, slotMessage = "noWin";//Message to be displayed underslot machine
-const int jackpot = 100, award8 = 5, awardO = 3, awardA = 2, awardBlank = 1;//Amount to reward for each type 
-const int coinsPerDollar = 4, doubleWin = 2, tripleWin = 5;//Rates & award bonuses
+
+string tw, slotMessage = "noWin"; // Lines 9-20 can be changed to adjust different values
+                         //Amount to reward for each type 
+const int jackpot = 100;// '7'
+const int award8 = 5;// '8'
+const int awardO = 3; // 'O'
+const int awardA = 2; // '@'
+const int awardBlank = 1; // ' '
+                              //Coin cost (line 15) & starting values (lines 16 & 17)
+const int coinsPerDollar = 4; //# of coins per dollar
+const int coinStart = 0; //# of starting coins
+const double moneyStart = 5.00; //Amount of starting money
+						  //Reward multipliers
+const int doubleWin = 2; //Double win
+const int tripleWin = 5; //Triple win
+
+//Created on 11/16/2023 by Josiah Tripp
 
 char display[3][3] = {
 
@@ -194,8 +208,8 @@ void checkWinnings(char arr[][3], double& money, string& message) {
 int main() {
 
 	srand(static_cast<unsigned>(time(nullptr)));//Sets random number seed
-	int coinAmount = 0;
-	double money = 5;
+	int coinAmount = coinStart;
+	double money = moneyStart;
 
 	for (int i = 0; i < 1;) {//Indefinite Loop
 
