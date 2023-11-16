@@ -1,11 +1,12 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <sstream>
 
 using namespace std;
-int coinAmount = 0;
-double money = 5;
-string tw;
+string tw, slotMessage;//Message to be displayed underslot machine
+const double jackpot = 100, award8 = 5, awardO = 3, awardA = 2, awardBlank = 1;//Amount to reward for each type 
+const int coinsPerDollar = 4, doubleWin = 2, tripleWin = 5;//Rates & award bonuses
 
 char display[3][3] = {
 
@@ -33,28 +34,28 @@ void spinWheels(char display[3][3], int &coinAmount) {
 	}
 }
 
-bool coinChecker(double &money, int &coinAmount) {
+bool coinChecker(double &money, int &coinAmount, string &message) {
 
 	bool hasBoughtCoins = false;
 
-	if (coinAmount == 0 && money == 0) {
+	if (coinAmount == 0 && money == 0) {//User has nothing left
 
 		cout << "You're broke!" << endl << "Goodbye!" << endl;
 		cin.ignore();
 		getline(cin, tw);
 		exit(0);
 	}
-	else if (coinAmount == 0) {
+	else if (coinAmount == 0) {//User has money, but no coins
 
 		while (hasBoughtCoins == false) {
 
-			cout << "Insert Coins: ($1 = 4 coins)" << endl
+			cout << "Insert Coins: ($1 = " << coinsPerDollar << " coins)" << endl
 				<< "Max amount of coins you can currently buy: " << fixed 
-				<< setprecision(0) << money * 4 << endl 
+				<< setprecision(0) << money * coinsPerDollar << endl 
 				<< "Enter the amount of coins you'd like to purchase" << endl;
 			cin >> coinAmount;
 
-			if (coinAmount == 0) {
+			if (coinAmount == 0) {//User wants to buy no coins (Exits if y, loops if n)
 
 				while (tw != "n" && tw != "N") {
 					cout << "You'd like to walk away? (y/n)" << endl;
@@ -66,33 +67,39 @@ bool coinChecker(double &money, int &coinAmount) {
 			else if (coinAmount / 4.0 <= money) {
 
 				money = money - coinAmount / 4.0;
-				cout << "Purchased " << coinAmount << " coins!";
-
+				message = "Purchased " + to_string(coinAmount) + " coins!";
 				hasBoughtCoins = true;
 			}
-			else cout << "Not enough Funds!" << endl;
+			else cout << "Not enough Funds! Please enter an amount you can afford!" << endl;
 
 			cout << endl;
-			cin.ignore();
 		}
 	}
-
 	return hasBoughtCoins;
 }
 
-void printMachine(char screen[][3], double money, int coinAmount) {
+void printMachine(char screen[][3], double money, int coinAmount, string winMessage){
 
+	cout << fixed << setprecision(0)//Prints scoreBoard
+		<< endl << "__________________________" << endl
+		<< "|7|7|7| = Jackpot! ($" << left << setw(3) << jackpot << ")|" << endl
+		<< fixed << setprecision(2)
+		<< "|8|8|8| = $" << left << setw(14) << award8 << "|" << endl
+		<< "|O|O|O| = $" << left << setw(14) << awardO << "|" << endl
+		<< "|@|@|@| = $" << left << setw(14) << awardA << "|" << endl
+		<< "| | | | = $" << left << setw(14) << awardBlank << "|" << endl
+		<< "--------------------------" << endl << endl;
 
-	cout << R"(                             __________________________
-    Slot Machine!            | 7 7 7 = Jackpot! ($100)|
-=====================        | 8 8 8 = $30            |
-|                   |        | O O O = $10            |
-|___________________|        | @ @ @ = $5             |
-||     |     |     ||        |       = $1             |
-||     |     |     ||        --------------------------
+	//Prints machine with wheel characters
+ cout << R"(Slot Machine!
+=====================        
+|                   |        
+|___________________|
+||     |     |     ||
+||     |     |     ||
 )";
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 3; i++) {//Prints wheel characters and wheel dividers
 		cout << "||  ";
 		for (int j = 0; j < 2; j++) cout << screen[i][j] << "  |  ";
 		cout << screen[i][2] << "  ||" << endl;
@@ -104,92 +111,99 @@ void printMachine(char screen[][3], double money, int coinAmount) {
 [][][][][]X[][][][][]
  Hit Enter to roll!
 
-$: )" << fixed << setprecision(2) << money 
-<< "        Coins: " << coinAmount << endl << endl;
+)";
+	if (winMessage != "noWin") cout << winMessage << endl << endl;//Prints the message unless the message is "noWin"
+
+	cout << "$: " << fixed << setprecision(2) << money//Prints current stats (Money and Coins)
+		<< "        Coins: " << coinAmount << endl << endl;
 }
 
-void checkWinnings(char arr[][3], double &money) {
+void checkWinnings(char arr[][3], double& money, string& message) {
 
-	bool win = false;
-	char winType[3] = { '-','-','-' };
-	string winDisp = "";
-	int earnings = 0, winNum = 0;
+	char winType[3];
+	int winNum = 0, earnings = 0;
+	ostringstream msg;
+	bool jp = false;
 
 	for (int i = 0; i < 3; i++) //Horizontal Win
-		if (arr[i][0] == arr[i][1] && arr[i][1] == arr[i][2]) winType[i] = arr[i][0];
-			
-		if (arr[0][0] == arr[1][1] && arr[1][1] == arr[2][2] //Diagonal Win
-			|| arr[2][0] == arr[1][1] && arr[1][1] == arr[0][2]) winType[0] = arr[1][1];
+		if (arr[i][0] == arr[i][1] && arr[i][1] == arr[i][2]) winType[winNum] = arr[i][0], winNum++;
 
-		for (int i = 0; i < 3; i++) {
-			switch (winType[i]) {
-			case '7':
-				earnings = earnings + 100;
-				winDisp += '7';
-				winNum++;
-				break;
-			case '8':
-				earnings = earnings + 30;
-				winDisp += '8';
-				winNum++;
-				break;
-			case 'O':
-				earnings = earnings + 10;
-				winDisp += 'O';
-				winNum++;
-				break;
-			case '@':
-				earnings = earnings + 5;
-				winDisp += '@';
-				winNum++;
-				break;
-			case ' ':
-				earnings = earnings + 1;
-				winDisp += ' ';
-				winNum++;
-				break;
-			case '-':
-				break;
-			}
-		}
+	if (arr[0][0] == arr[1][1] && arr[1][1] == arr[2][2] //Diagonal Win
+		|| arr[2][0] == arr[1][1] && arr[1][1] == arr[0][2]) winType[winNum] = arr[1][1], winNum++;
 
-		switch (winNum) {
+	for (int i = 0; i < winNum; i++) {//Adds winning character(s) to string
 
-		case 0:
-			cout << "Nothing this time." << endl;
+		msg << "|" << winType[i] << "|";
+
+		switch (winType[i]) {//adds initial earnings
+
+		case '7':
+			earnings += jackpot;
+			jp = true;
 			break;
 
-		case 1: 
-			cout << winDisp << " " << winDisp << " " << winDisp
-				<< endl << "Win!" << endl;
-			money = money + earnings;
+		case '8':
+			earnings += award8;
 			break;
-		case 2:
-			cout << winDisp << " " << winDisp << " " << winDisp
-				<< endl << "Double Win! (Earnings x 2)" << endl;
-			money = money + (earnings * 2);
+
+		case 'O':
+			earnings += awardO;
 			break;
-		case 3:
-			cout << winDisp << " " << winDisp << " " << winDisp
-				<< endl << "Triple Win! (Earnings x 5)" << endl;
-			money = money + (earnings * 5);
+
+		case '@':
+			earnings += awardA;
+			break;
+
+		case ' ':
+			earnings += awardBlank;
 			break;
 		}
+	}
+	msg << " x3: "; //Used for message display, removed if wins = 0
+	if (jp) msg << "Jackpot! ";//Adds if applicable
+
+	switch (winNum) {//Actions based on Number of Wins
+
+	case 0:
+		message = "noWin";
+		break;
+
+	case 1:
+		msg << "Single Win";
+		break;
+
+	case 2:
+		msg << "Double Win: Earnings x " + doubleWin;
+		earnings = earnings * doubleWin;
+		break;
+
+	case 3:
+		msg << "Triple Win: Earnings x " + tripleWin;
+		earnings = earnings * tripleWin;
+		break;
+	}
+
+	if (winNum > 0) {
+		msg << "! | + $" << to_string(earnings) << "!";//Completes msg string and sets slotMessage to it
+		message = msg.str();
+		money += earnings;
+	}
 }
-
-
 
 int main() {
 
-	srand(static_cast<unsigned>(time(nullptr)));
+	srand(static_cast<unsigned>(time(nullptr)));//Sets random number seed
+	int coinAmount = 0;
+	double money = 5;
 
 	for (int i = 0; i < 1;) {
-		if (coinChecker(money, coinAmount)) printMachine(display, money, coinAmount);
+
+		if (coinChecker(money, coinAmount, slotMessage)) cin.ignore();//Returns True if the user purchases coins
+		system("cls");
+		printMachine(display, money, coinAmount, slotMessage);
 		getline(cin, tw);
 		spinWheels(display, coinAmount);
-
-		checkWinnings(display, money);
-		printMachine(display, money, coinAmount);
+		checkWinnings(display, money, slotMessage);
 	}
 
 }
